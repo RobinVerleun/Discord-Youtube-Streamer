@@ -16,6 +16,8 @@ client.on('ready', () => {
   log.info(`Logged in as ${client.user.tag}!`);
 });
 
+// TODO: Make a voiceController class which gets initialized here. More scalable and workable than many
+// functions in util, and lets us have a semblance of state.
 
 client.on('message', msg => {
 
@@ -24,18 +26,24 @@ client.on('message', msg => {
 
   // Ignore all requests which don't begin with the proper prefix.
   if(msg.content.indexOf(config.prefix) !== 0) return;
-
+  
+  // Get the command and args
   const { content } = msg;
 
-  switch(content) {
-    case 'yt play':
+  let args = msg.content.substring(config.prefix_length).split(' ');
+  let cmd = args[0];
+  args = args.splice[1];
+
+  switch(cmd) {
+    case 'play':
       joinChannel(msg);
-      break;
-    case 'yt gtfo':
+      return;
+    case 'gtfo':
       leaveChannel(msg);
-      break;
-    case 'yt ping':
+      return;
+    case 'ping':
       msg.channel.send(msg.member.joinedAt.toDateString());
+      return;
   }
 });
 
