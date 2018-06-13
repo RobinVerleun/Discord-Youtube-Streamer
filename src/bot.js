@@ -3,12 +3,15 @@ const auth = require('./config/auth.js');
 const config = require('./config/config.js');
 
 import Discord from 'discord.js';
-import { joinChannel, leaveChannel } from './bot-utils';
+import VoiceController from './voiceController';
+import TextController from './textController';
 
 /*
 * The strategy here is we're going to attach callbacked to certain events for the client.
 */
 const client = new Discord.Client();
+const voiceController = new VoiceController(client);
+const textController = new TextController(client);
 
 // The ready event is vital. It means the bot will only start reacting to information
 // from discord _after_ the ready is emitted.
@@ -16,8 +19,6 @@ client.on('ready', () => {
   log.info(`Logged in as ${client.user.tag}!`);
 });
 
-// TODO: Make a voiceController class which gets initialized here. More scalable and workable than many
-// functions in util, and lets us have a semblance of state.
 
 client.on('message', msg => {
 
@@ -32,17 +33,17 @@ client.on('message', msg => {
 
   let args = msg.content.substring(config.prefix_length).split(' ');
   let cmd = args[0];
-  args = args.splice[1];
+  args = args.splice[1] || [];
 
   switch(cmd) {
     case 'play':
-      joinChannel(msg);
+      voiceController.playYoutubeAudio(msg, args[0]);
       return;
     case 'gtfo':
-      leaveChannel(msg);
+      voiceController.leaveChannel(msg);
       return;
     case 'ping':
-      msg.channel.send(msg.member.joinedAt.toDateString());
+      textController.messageChannel(msg.channel, msg.member.joinedAt.toDateString());
       return;
   }
 });
