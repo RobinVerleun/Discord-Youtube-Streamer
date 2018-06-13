@@ -33,14 +33,14 @@ client.on('message', msg => {
 
   let args = msg.content.substring(config.prefix_length).split(' ');
   let cmd = args[0];
-  args = args.splice[1] || [];
+  args = args.slice(1) || [];
 
   switch(cmd) {
     case 'play':
       voiceController.playYoutubeAudio(msg, args[0]);
       return;
     case 'gtfo':
-      voiceController.leaveChannel(msg);
+      voiceController.leaveChannel();
       return;
     case 'ping':
       textController.messageChannel(msg.channel, msg.member.joinedAt.toDateString());
@@ -50,8 +50,3 @@ client.on('message', msg => {
 
 // Log the bot in
 client.login(auth.token);
-
-
-
-// logger.debug(member.joinedAt.toDateString);
-// msg.channel.send(member.joinedAt.toDateString());

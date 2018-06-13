@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { logLevel } from './config/config';
 const { combine, timestamp, prettyPrint } = winston.format;
 
 /*
@@ -29,7 +30,7 @@ const { combine, timestamp, prettyPrint } = winston.format;
       
   */ 
 const logger = winston.createLogger({
-  level: 'debug',
+  level: logLevel,
   format: combine(
     timestamp(),
     prettyPrint()

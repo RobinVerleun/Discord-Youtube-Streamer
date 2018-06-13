@@ -8,6 +8,8 @@ export default class VoiceChannelController {
   constructor(client) {
     this.client = client;
     client.voiceController = this;
+    
+    this.currentVoiceChannel = null;
   }
 
   /**
@@ -21,8 +23,7 @@ export default class VoiceChannelController {
   playYoutubeAudio(msg, _uri) {
 
     const { textController } = this.client;
-    const uri = _uri || 'https://www.youtube.com/watch?v=B7bqAsxee4I';
-
+    const uri = _uri || 'https://www.youtube.com/watch?v=mp28JPs25ek';
 
     if(!msg.member.voiceChannel) {
       textController.messageChannel(
@@ -35,7 +36,9 @@ export default class VoiceChannelController {
     if(voiceChannel.joinable) {
       voiceChannel.join()
         .then(connection => {
+          this.currentVoiceChannel = voiceChannel;
           this.streamAudio(connection, uri);
+          log.debug(`Joined voiceChannel: ${voiceChannel.name}.`);
       }).catch( e => {
           client.textController.messageChannel(msg.channel, 'Uh oh - there was a problem playing that link.');
           log.error(e);
@@ -62,25 +65,25 @@ export default class VoiceChannelController {
    * @param {string} uri     : json object which contains information relevant to the yt link
    */
   streamAudio(connection, uri) {
-
     const stream = (
       ytdl(
         uri, {filter : 'audioonly'} 
       ));
-
     const dispatcher = connection.playStream(stream);
     dispatcher.once('end', (reason) => {
       log.debug('Ended: ' + reason);
-      // this.leaveChannel();
+      this.leaveChannel();
     });
   }
 
-  leaveChannel(msg) {
-    // Check if the bot already is in the voice channel, and provide a message accordingly
-    // TODO: Find if possible to make the bot leave from any channel. 
-    if(msg.member.voiceChannel) {
-      msg.member.voiceChannel.leave();
-    }
+  /**
+   * Checks if the current channel has a state. If so, leaves.
+   */
+  leaveChannel() {
+    if(this.currentVoiceChannel) {
+      this.currentVoiceChannel.leave();
+      this.currentVoiceChannel = null;
+    };
   }
   
 }
