@@ -1,3 +1,4 @@
 module.exports = {
-  token: process.env.DISCORD_YTBOT_TOKEN
+  discordToken: process.env.DISCORD_YTBOT_TOKEN,
+  ytDataTokenPath: process.env.YT_TOKEN_PATH
 }

@@ -2,3 +2,6 @@
 
 #node modules
 **/node_modules
+
+#Other
+client_secret.json

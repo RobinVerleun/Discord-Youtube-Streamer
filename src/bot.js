@@ -1,5 +1,5 @@
 import log from './logger';
-const auth = require('./config/auth.js');
+const token = require('./config/auth.js').discordToken;
 const config = require('./config/config.js');
 
 import Discord from 'discord.js';
@@ -49,4 +49,4 @@ client.on('message', msg => {
 });
 
 // Log the bot in
-client.login(auth.token);
+client.login(token);
