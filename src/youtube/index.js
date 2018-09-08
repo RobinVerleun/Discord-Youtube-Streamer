@@ -1,42 +1,11 @@
-const AuthInstance = require('./auth');
-const { google } = require('googleapis');
+const getLikeVideos = require('./videoCall').getLikeVideos;
+const requestConfig = require('./videoCall').requestConfig;
 
-/**
- * Remove parameters that do not have values.
- *
- * @param {Object} params A list of key-value pairs representing request
- *                        parameters and their values.
- * @return {Object} The params object minus parameters with no values set.
- */
-function removeEmptyParameters(params) {
-  for (var p in params) {
-    if (!params[p] || params[p] == 'undefined') {
-      delete params[p];
-    }
-  }
-  return params;
-}
+let videos;
 
-const videosListMyRatedVideos = async(requestData) => {
-  let auth = await AuthInstance();
-  var service = google.youtube('v3');
-  var parameters = removeEmptyParameters(requestData['params']);
-  parameters['auth'] = auth;
-  
-  let res = await service.videos.list(parameters)
-  .catch( err => {
-    console.log('The API returned an error: ' + err);
-  });
-  console.log(res.data);
-  return res.data;
-}
 
-const requestData = {
-  'params': {
-    'myRating': 'like',
-    'part': 'snippet'
-  }
-}
+// Get all the videos here.... most likey get them in sets of 20 per request.
+// Upon completion, parse the video links and store their titles and ID's.
+// Then, query again until the field nextPageToken is absent.
 
-module.exports.getLikeVideos=videosListMyRatedVideos;
-module.exports.requestConfig=requestData;
+// params.pageToken = res.nextPageToken;
