@@ -15,37 +15,37 @@ const textController = new TextController(client);
 
 // The ready event is vital. It means the bot will only start reacting to information
 // from discord _after_ the ready is emitted.
-client.on('ready', () => {
-  log.info(`Logged in as ${client.user.tag}!`);
-});
+//client.on('ready', () => {
+//  log.info(`Logged in as ${client.user.tag}!`);
+// });
 
 
 client.on('message', msg => {
 
-  // Ignore other bots.
-  if(msg.author.bot) return;
+// Ignore other bots.
+if(msg.author.bot) return;
 
-  // Ignore all requests which don't begin with the proper prefix.
-  if(msg.content.indexOf(config.prefix) !== 0) return;
-  
-  // Get the command and args
-  const { content } = msg;
+// Ignore all requests which don't begin with the proper prefix.
+if(msg.content.indexOf(config.prefix) !== 0) return;
 
-  let args = msg.content.substring(config.prefix_length).split(' ');
-  let cmd = args[0];
-  args = args.slice(1) || [];
+// Get the command and args
+const { content } = msg;
 
-  switch(cmd) {
-    case 'play':
-      voiceController.playYoutubeAudio(msg, args[0]);
-      return;
-    case 'gtfo':
-      voiceController.leaveChannel();
-      return;
-    case 'ping':
-      textController.messageChannel(msg.channel, msg.member.joinedAt.toDateString());
-      return;
-  }
+let args = msg.content.substring(config.prefix_length).split(' ');
+let cmd = args[0];
+args = args.slice(1) || [];
+
+switch(cmd) {
+case 'play':
+voiceController.playYoutubeAudio(msg, args[0]);
+return;
+case 'gtfo':
+voiceController.leaveChannel();
+return;
+case 'ping':
+textController.messageChannel(msg.channel, msg.member.joinedAt.toDateString());
+return;
+}
 });
 
 // Log the bot in
