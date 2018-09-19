@@ -17,7 +17,7 @@ const getAuthInstance = async () => {
 
   try {
 
-    let raw = fs.readFileSync('../../client_secret.json');
+    let raw = fs.readFileSync('./client_secret.json');
     let credentials = JSON.parse(raw);
 
     let clientSecret = credentials.installed.client_secret;

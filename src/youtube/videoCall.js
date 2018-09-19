@@ -34,7 +34,7 @@ const requestData = {
   'params': {
     'myRating': 'like',
     'part': 'snippet',
-    'maxResults': '2'
+    'maxResults': '10'
   }
 }
 

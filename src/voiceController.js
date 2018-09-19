@@ -10,6 +10,7 @@ export default class VoiceChannelController {
     client.voiceController = this;
     
     this.currentVoiceChannel = null;
+    this.dispatcher = null;
   }
 
   /**
@@ -20,27 +21,33 @@ export default class VoiceChannelController {
    * 
    * @param {*} msg : A Message object from the Discord.js API. Used to access the voice channel of a user.
    */
-  playYoutubeAudio(msg, _uri) {
+  playYoutubeAudio(msg, videos, _uri) {
 
     const { textController } = this.client;
-    const uri = _uri || 'https://www.youtube.com/watch?v=mp28JPs25ek';
-
+    
     if(!msg.member.voiceChannel) {
       textController.messageChannel(
-        msg.channel, `Looks like you're not in a voice channel ${msg.member.user} - please join one and try again.`);
+      msg.channel, `Looks like you're not in a voice channel ${msg.member.user} - please join one and try again.`);
       return;
     }
-
+      
     const voiceChannel = msg.member.voiceChannel;
 
     if(voiceChannel.joinable) {
       voiceChannel.join()
-        .then(connection => {
-          this.currentVoiceChannel = voiceChannel;
-          this.streamAudio(connection, uri);
-          log.debug(`Joined voiceChannel: ${voiceChannel.name}.`);
+      .then(connection => {
+        this.currentVoiceChannel = voiceChannel;
+
+        if(_uri) {
+          this.streamAudio(connection, _uri);
+        } 
+        // else {
+        //   this.streamPlaylist(connection, videos);
+        // }
+
+        log.debug(`Joined voiceChannel: ${voiceChannel.name}.`);
       }).catch( e => {
-          client.textController.messageChannel(msg.channel, 'Uh oh - there was a problem playing that link.');
+          this.client.textController.messageChannel(msg.channel, 'Uh oh - there was a problem playing that link.');
           log.error(e);
         }
       )
@@ -65,15 +72,54 @@ export default class VoiceChannelController {
    * @param {string} uri     : json object which contains information relevant to the yt link
    */
   streamAudio(connection, uri) {
+    log.debug(uri);
     const stream = (
       ytdl(
         uri, {filter : 'audioonly'} 
-      ));
+      )
+    );
     const dispatcher = connection.playStream(stream);
     dispatcher.once('end', (reason) => {
       log.debug('Ended: ' + reason);
       this.leaveChannel();
     });
+    dispatcher.on('error', (reason) => {
+      log.debug('Ended: ' + reason);
+      this.leaveChannel();
+    });
+  }
+
+  streamPlaylist(connection, videos) {
+    this.shuffleArray(videos);
+    
+    let index = 0;
+    let playing = false;
+    while(index < videos.length) {
+      if(!playing) {
+        const stream = (
+          ytdl(
+            `https://www.youtube.com/watch?v=${videos[index].id}`, {filter : 'audioonly'} 
+          )
+        );
+        const dispatcher = connection.playStream(stream);
+        dispatcher.once('end', (reason) => {
+          log.debug('Ended: ' + reason);
+          if(index === videos.length - 1) {
+            this.leaveChannel();
+          } else {
+            index++;
+          }
+        });
+        playing = true;
+      }
+    }
+  };
+
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
   }
 
   /**
