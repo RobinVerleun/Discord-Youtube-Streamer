@@ -1,8 +1,6 @@
 import log from './logger';
 import ytdl from 'ytdl-core';
 
-import TextController from './textController';
-
 export default class VoiceChannelController {
 
   constructor(client) {
@@ -11,6 +9,7 @@ export default class VoiceChannelController {
     
     this.currentVoiceChannel = null;
     this.dispatcher = null;
+    this.playing = true;
   }
 
   /**
@@ -37,15 +36,15 @@ export default class VoiceChannelController {
       voiceChannel.join()
       .then(connection => {
         this.currentVoiceChannel = voiceChannel;
-
+        this.playing = true;
         if(_uri) {
           this.streamAudio(connection, _uri);
-        } 
-        // else {
-        //   this.streamPlaylist(connection, videos);
-        // }
+        } else {
+          this.shuffleArray(videos);
+          this.streamPlaylist(connection, msg.channel, videos, 0);
+        }
 
-        log.debug(`Joined voiceChannel: ${voiceChannel.name}.`);
+        log.info(`Joined voiceChannel: ${voiceChannel.name}.`);
       }).catch( e => {
           this.client.textController.messageChannel(msg.channel, 'Uh oh - there was a problem playing that link.');
           log.error(e);
@@ -78,40 +77,39 @@ export default class VoiceChannelController {
         uri, {filter : 'audioonly'} 
       )
     );
-    const dispatcher = connection.playStream(stream);
-    dispatcher.once('end', (reason) => {
-      log.debug('Ended: ' + reason);
-      this.leaveChannel();
-    });
-    dispatcher.on('error', (reason) => {
+    this.dispatcher = connection.playStream(stream);
+    this.dispatcher.once('end', (reason) => {
       log.debug('Ended: ' + reason);
       this.leaveChannel();
     });
   }
 
-  streamPlaylist(connection, videos) {
-    this.shuffleArray(videos);
-    
-    let index = 0;
-    let playing = false;
-    while(index < videos.length) {
-      if(!playing) {
-        const stream = (
-          ytdl(
-            `https://www.youtube.com/watch?v=${videos[index].id}`, {filter : 'audioonly'} 
-          )
-        );
-        const dispatcher = connection.playStream(stream);
-        dispatcher.once('end', (reason) => {
-          log.debug('Ended: ' + reason);
-          if(index === videos.length - 1) {
-            this.leaveChannel();
-          } else {
-            index++;
-          }
-        });
-        playing = true;
-      }
+  streamPlaylist(connection, channel, videos, index) {    
+    log.debug(videos);
+    log.debug(index);
+
+    if(this.playing) {
+      const stream = (
+        ytdl(
+          `https://www.youtube.com/watch?v=${videos[index].id}`, {filter : 'audioonly'} 
+        )
+      );
+
+      this.client.textController.messageChannel(channel, `Now playing: ${videos[index].title} :musical_note:`);
+      
+      this.dispatcher = connection.playStream(stream);
+      this.dispatcher.once('end', (reason) => { 
+        log.debug('Ended: ' + reason);
+        
+        // End of the videos, exit
+        if(index === videos.length - 1) {
+          this.leaveChannel();
+        }
+        else {
+          // Check if the connection is still alive 
+          this.streamPlaylist(connection, channel, videos, index+1)
+        }
+      });  
     }
   };
 
@@ -126,10 +124,17 @@ export default class VoiceChannelController {
    * Checks if the current channel has a state. If so, leaves.
    */
   leaveChannel() {
+    this.playing = false;
+
+    if(this.dispatcher) {
+      this.dispatcher.end();
+      this.dispatcher = null;
+    };
     if(this.currentVoiceChannel) {
       this.currentVoiceChannel.leave();
       this.currentVoiceChannel = null;
     };
+    
   }
   
 }

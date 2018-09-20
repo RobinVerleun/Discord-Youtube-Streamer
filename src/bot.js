@@ -38,10 +38,19 @@ getVideos()
   
     switch(cmd) {
       case 'play':
-        voiceController.playYoutubeAudio(msg, videos, args[0]);
+        if(voiceController.dispatcher !== null) {
+          textController.messageChannel(msg.channel, `Already in a channel playing ${msg.member.user}, you nigga.`);
+        } else {
+          voiceController.playYoutubeAudio(msg, videos, args[0]);
+        }
         return;
       case 'gtfo':
         voiceController.leaveChannel();
+        return;
+      case 'next':
+        if(voiceController.dispatcher) {
+          voiceController.dispatcher.end();
+        }
         return;
       case 'ping':
         textController.messageChannel(msg.channel, msg.member.joinedAt.toDateString());
